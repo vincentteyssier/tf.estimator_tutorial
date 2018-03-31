@@ -18,7 +18,8 @@ import numpy as np
 import sys
 import os
 
-tf.logging.set_verbosity(tf.logging.INFO)```
+tf.logging.set_verbosity(tf.logging.INFO)
+```
 
 For simplicity’s sake I will not use an arg parser for my hyper parameters but rather define them explicitly. Feel free to tune them, create for loops to try different values, etc…
 Being on a windows machine I use the “r” prefix for my file path to handle spaces in directories names and anti-slashes. If you are on Linux simply remove the “r” and paste your filepath.
@@ -33,7 +34,8 @@ FILE_TRAIN = PATH_DATASET + os.sep + "tf_train.csv"
 FILE_TEST = PATH_DATASET + os.sep + "tf_test.csv"    
 CSV_COLUMN_NAMES = []
 numerical_feature_names = []
-categorical_feature_names = []```
+categorical_feature_names = []
+```
 
 ##2) Loading your dataset:
 
@@ -48,7 +50,8 @@ train = pd.read_csv(FILE_TRAIN, names=CSV_COLUMN_NAMES, header=0)
 train_x, train_y = train, train.pop('labels')
 
 test = pd.read_csv(FILE_TEST, names=CSV_COLUMN_NAMES, header=0)
-test_x, test_y = test, test.pop('labels')```
+test_x, test_y = test, test.pop('labels')
+```
 
 ###b.	Get the columns type and store them in an array:
 
@@ -57,7 +60,8 @@ test_x, test_y = test, test.pop('labels')```
     if(train[column].dtype == np.float64 or train[column].dtype == np.int64):
         numerical_feature_names.append(column)
     else:
-        categorical_feature_names.append(column)```
+        categorical_feature_names.append(column)
+```
 
 ##3) Using Tensorflow feature_columns:
 
@@ -87,7 +91,8 @@ Depending on the model you choose, if you pick a DNN, your estimator will expect
             tf.feature_column.indicator_column(
                 tf.feature_column.categorical_column_with_hash_bucket(key=k, hash_bucket_size=current_bucket)
             )
-        )```
+        )
+```
 
 ##4) Input function:
 
@@ -134,8 +139,8 @@ First we want to handle the 3 modes that can be used by our estimator: train, ev
     elif mode == tf.estimator.ModeKeys.EVAL:
         tf.logging.info("my_model_fn: EVAL, {}".format(mode))
     elif mode == tf.estimator.ModeKeys.TRAIN:
-        tf.logging.info("my_model_fn: TRAIN, {}".format(mode))```
-
+        tf.logging.info("my_model_fn: TRAIN, {}".format(mode))
+```
 
 ###b.	Network architecture:
 
@@ -160,14 +165,16 @@ And now our first fully connected hidden layer. It takes the input_layer as inpu
 ```h1 = tf.layers.Dense(100, activation=tf.nn.relu, 
                             kernel_regularizer=regularizer,
                             kernel_initializer=initializer
-                            )(input_layer)```
+                            )(input_layer)
+```
 
 Let’s have a second hidden layer with 80 units:
 
 ```h2 = tf.layers.Dense(80, activation=tf.nn.relu, 
                             kernel_regularizer=regularizer,
                             kernel_initializer= initializer
-                            )(h1)```
+                            )(h1)
+```
 
 And finally our last layer which is another fully connected layer (Dense) outputs the logits. Since we want to classify 2 classes, our output layer has 2 units.:
 
@@ -187,7 +194,8 @@ The easiest is the prediction. We look at our logits and take the one with highe
             'probabilities': tf.nn.softmax(logits),
             'logits': logits,
         }
-        return tf.estimator.EstimatorSpec(mode, predictions=predictions)```
+        return tf.estimator.EstimatorSpec(mode, predictions=predictions)
+```
 
 We return an EstimatorSpec which defines our prediction model in the estimator.
 
@@ -210,14 +218,16 @@ Then we add them to tf.summary in order to log them for Tensorboard:
     ```tf.summary.scalar('my_accuracy', accuracy[1])
     tf.summary.scalar('my_precision', precision[1])
     tf.summary.scalar('my_recall', recall[1])
-    tf.summary.scalar('my_auc', auc[1])```
+    tf.summary.scalar('my_auc', auc[1])
+```
 
 
 We have everything we need for evaluation so let’s handle this case now:
 
 ```if mode == tf.estimator.ModeKeys.EVAL:
         return tf.estimator.EstimatorSpec(
-            mode, loss=loss, eval_metric_ops=metrics)```
+            mode, loss=loss, eval_metric_ops=metrics)
+```
 
 We return again an EstimatorSpec as for the prediction mode.
 
@@ -226,7 +236,8 @@ Now if we want to handle the training case we still need a few more elements in 
 ```    # training op
     assert mode == tf.estimator.ModeKeys.TRAIN, "TRAIN is only ModeKey left"
     optimizer = tf.train.AdagradOptimizer(learning_rate=0.05)
-    train_op = optimizer.minimize(loss, global_step=tf.train.get_global_step())```
+    train_op = optimizer.minimize(loss, global_step=tf.train.get_global_step())
+```
 
 I also like to see how my parameters are changing through iterations in Tensorboard. 
 We can add a summary for every weight, bias and gradient the following way:
@@ -237,7 +248,8 @@ We can add a summary for every weight, bias and gradient the following way:
         if grad is not None:
             tf.summary.histogram(var.op.name + '/gradients', grad)
     for var in tf.trainable_variables():
-        tf.summary.histogram(var.name, var)```
+        tf.summary.histogram(var.name, var)
+```
 
 Finally we return the EstimatorSpec for our training mode: 
 
@@ -254,7 +266,8 @@ We need to pass it the model function name and a path to which it should store t
 
 ```classifier = tf.estimator.Estimator(
     model_fn=my_model_fn,
-    model_dir=PATH)  ```
+    model_dir=PATH)  
+```
 
 If you wish to make changes to your model, make sure you change the path or remove the checkpoints from the folder, otherwise it will crash. If you don’t change your model but run your training multiple times, it will not start from scratch if you have not deleted the checkpoints. Instead it will start from where it stopped at the previous training. Loading the last learnt weights and biases.
 
@@ -275,7 +288,8 @@ Let’s print our results:
 ```print ("Evaluation results")
 
 for key in evaluate_result:
-   print("   {}, was: {}".format(key, evaluate_result[key]))```
+   print("   {}, was: {}".format(key, evaluate_result[key]))
+```
 
 ###d.	Prediction:
 
@@ -287,12 +301,14 @@ You could load prediction_input from a csv or craft a dictionary for the example
     'c1': ["Sony", "Samsung", "Samsung"],
     'n2': [10, 55, 2],
     'n3': [1, 0, 0]
-}```
+}
+```
 
 You will reuse the eval/predict input function but with None instead of labels and 1 as batch size or bigger if you want to predict in batches.
 
 ```predict_results = classifier.predict(
-        input_fn=lambda:eval_input_fn(prediction_input, None, 1))```
+        input_fn=lambda:eval_input_fn(prediction_input, None, 1))
+```
 
 And finally let’s print the result of the prediction and the related probability:
 
@@ -306,7 +322,8 @@ for pred_dict, expec in zip(predict_results, expected):
         probability = pred_dict['probabilities'][class_id]
 
         print(template.format(CLASSES[class_id],
-                              100 * probability, expec))```
+                              100 * probability, expec))
+```
 
 
 ##7) Tensorboard:
@@ -322,7 +339,8 @@ This what we pass in this example:
 …
 classifier = tf.estimator.Estimator(
     model_fn=my_model_fn,
-    model_dir=PATH)  ```
+    model_dir=PATH)  
+```
 
 Once you have made your loop to try different models and logged your summaries in different folders, you can compare them in tensorboard by starting it the following way:
 
