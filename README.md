@@ -4,7 +4,7 @@ In this tutorial we will see how you can use Tensorflow’s high level API on a 
 In most of the tutorials, it is assumed that your dataset have perfect quality or contains a reasonable amount of columns. However a lot of real life examples have to deal with missing values, non-numerical columns, high amount of features, …. We will try here to address these issues in an automated way.
 We assume here that your dataset is in csv format, but any other format would fit as long as you can load it in a pandas dataframe.
 
-##1)	Preparations:
+## 1)	Preparations:
 
 First of all let’s import our libraries and set verbosity higher so we have more details to look at during training:
 
@@ -37,13 +37,13 @@ numerical_feature_names = []
 categorical_feature_names = []
 ```
 
-##2) Loading your dataset:
+## 2) Loading your dataset:
 
 Next we load the csv files in a pandas data frame.  I will cover in another tutorial how to handle csv files or dataset bigger than your available RAM (or GPU memory).
 
 To build your dataset, you need to know the data type of your columns, their names and separate your labels and features. The code below is doing that in an automated way. This way there is no need to declare manually your data structure when building the Tensorflow dataset.
 
-###a.	Get the column names and load the csv
+### a.	Get the column names and load the csv
 
 ```CSV_COLUMN_NAMES = pd.read_csv(FILE_TRAIN, nrows=1).columns.tolist()
 train = pd.read_csv(FILE_TRAIN, names=CSV_COLUMN_NAMES, header=0)
@@ -53,7 +53,7 @@ test = pd.read_csv(FILE_TEST, names=CSV_COLUMN_NAMES, header=0)
 test_x, test_y = test, test.pop('labels')
 ```
 
-###b.	Get the columns type and store them in an array:
+### b.	Get the columns type and store them in an array:
 
 ```for column in train.columns:
     print (train[column].dtype)
@@ -63,7 +63,7 @@ test_x, test_y = test, test.pop('labels')
         categorical_feature_names.append(column)
 ```
 
-##3) Using Tensorflow feature_columns:
+## 3) Using Tensorflow feature_columns:
 
 To handle non numerical value and perform efficient computation, Tensorflow has introduced feature_columns. 
 Please see official tutorial here.
@@ -72,11 +72,11 @@ We will use tf.feature_column.numeric_column for our columns containing floats o
 
 Depending on the model you choose, if you pick a DNN, your estimator will expect that all columns fed to the model are dense columns. To address this you need to embed your categorical column in an indicator or embedding column. If your inputs are sparse for this column, choose an embedding column, otherwise choose an indicator column.
 
-###a.	Numerical columns:
+### a.	Numerical columns:
 
 `feature_columns = [tf.feature_column.numeric_column(k) for k in numerical_feature_names]`
 
-###b.	Categorical columns :
+### b.	Categorical columns :
 
 ```for k in categorical_feature_names:
     current_bucket = train[k].nunique()
@@ -94,7 +94,7 @@ Depending on the model you choose, if you pick a DNN, your estimator will expect
         )
 ```
 
-##4) Input function:
+## 4) Input function:
 
 Now that we have prepared our data structure for processing, let’s create an input function. It is creating a TF Dataset to be fed to the estimator. We will detail what is an estimator later.
 Since we need to train, eval and predict, we will create 2 input functions handling these cases. We also shuffle and repeat a repeat_count amount of iteration for training (epochs), and use mini batches for both modes. 
@@ -119,7 +119,7 @@ def eval_input_fn(features, labels, batch_size):
     return dataset
 ```
 
-##5) Model function:
+## 5) Model function:
 
 An estimator needs to get the data from the input function. Then it needs a model function in order to know how to process your data. 
 There are 2 kind of model functions: pre-made models or custom ones. 
@@ -128,7 +128,7 @@ A list of pre-made models can be found here. They are easy to implement and alre
 Custom models offer more flexibility, but everything needs to be declared explicitly. Layers, units, initialization, regularization, activations…
 Here we want to be able to tune our model therefore we will use a custom model.
 
-###a.	Declaration and modes:
+### a.	Declaration and modes:
 
 First we want to handle the 3 modes that can be used by our estimator: train, evaluate, predict. Let’s print which mode we are in:
 
@@ -142,7 +142,7 @@ First we want to handle the 3 modes that can be used by our estimator: train, ev
         tf.logging.info("my_model_fn: TRAIN, {}".format(mode))
 ```
 
-###b.	Network architecture:
+### b.	Network architecture:
 
 Secondly we want to declare how our NN will look like.
 
@@ -255,11 +255,11 @@ Finally we return the EstimatorSpec for our training mode:
 
 ```    return tf.estimator.EstimatorSpec(mode, loss=loss, train_op=train_op)```
 
-##6) Classifier, Training, Evaluation, Prediction:
+## 6) Classifier, Training, Evaluation, Prediction:
 
 Now that we have all the bricks to build our estimator, let’s put the final touch and use it.
 
-###a.	Creating the estimator:
+### a.	Creating the estimator:
 
 You can think of an estimator as a playground where we throw our examples, model, and/or requests, and that run the desired operations (train/eval/predict).
 We need to pass it the model function name and a path to which it should store the training checkpoints and the Tensorboard logs.
@@ -271,13 +271,13 @@ We need to pass it the model function name and a path to which it should store t
 
 If you wish to make changes to your model, make sure you change the path or remove the checkpoints from the folder, otherwise it will crash. If you don’t change your model but run your training multiple times, it will not start from scratch if you have not deleted the checkpoints. Instead it will start from where it stopped at the previous training. Loading the last learnt weights and biases.
 
-###b.	Training:
+### b.	Training:
 
 Here we feed our estimator with the train input function and the features and labels created at the beginning. We set the batch size and the amount of iterations we want. If you use an arg parser you should input your argument values here.
 
 `classifier.train(input_fn=lambda: train_input_fn(train_x, train_y, BATCH_SIZE, repeat_count))`
 
-###c.	Evaluation:
+### c.	Evaluation:
 
 Once we have trained, let’s look how good we do on the test set by evaluating it. This time we pass the evaluation input function with test features and labels, and the batch size. We do not pass the `repeat_count` since we will iterate only once over our test set:
 
@@ -291,7 +291,7 @@ for key in evaluate_result:
    print("   {}, was: {}".format(key, evaluate_result[key]))
 ```
 
-###d.	Prediction:
+### d.	Prediction:
 
 Finally, let’s use our model on unlabelled data and see how our predictions look like.
 
@@ -326,7 +326,7 @@ for pred_dict, expec in zip(predict_results, expected):
 ```
 
 
-##7) Tensorboard:
+## 7) Tensorboard:
 
 Your model has been saved in the PATH directory. You will find there your model checkpoints and the log of the summaries for tensorboard.
 You then start tensorboard the following way:
