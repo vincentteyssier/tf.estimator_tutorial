@@ -4,6 +4,11 @@ In this tutorial we will see how you can use Tensorflow’s high level API on a 
 In most of the tutorials, it is assumed that your dataset have perfect quality or contains a reasonable amount of columns. However a lot of real life examples have to deal with missing values, non-numerical columns, high amount of features, …. We will try here to address these issues in an automated way.
 We assume here that your dataset is in csv format, but any other format would fit as long as you can load it in a pandas dataframe.
 
+TODO: 
+- use custom gradients for gradient clipping
+- parametrize layers/units, learning_rate, regularization, batch_size
+- use tf experiments
+
 ## 1)	Preparations:
 
 First of all let’s import our libraries and set verbosity higher so we have more details to look at during training:
